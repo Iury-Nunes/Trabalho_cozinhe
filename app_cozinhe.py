@@ -33,6 +33,9 @@ if 'estoque' not in st.session_state:
 st.markdown("<h1 style='color:#6C3483;'>Cozinhe com o que você tem 🥦🍅🍞</h1>", unsafe_allow_html=True)
 st.markdown("Organize seu estoque de alimentos e **evite desperdícios** com praticidade.")
 
+hoje = datetime.today().date()
+st.info(f"📅 Hoje é: {hoje.strftime('%d/%m/%Y')}")
+
 # Botão para resetar o estoque
 if st.button("🗑️ Resetar Estoque"):
     if st.confirm("Tem certeza que deseja apagar todos os dados do estoque?"):
@@ -68,22 +71,21 @@ st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
 else:
-    hoje = datetime.today().date()
     tabela = []
     for item in st.session_state.estoque:
         validade_data = item["validade"]
-        dias_restantes = (validade_data - hoje).days
+        dias_restantes = (validade_data - hoje).days + 1  # ajuste de contagem
 
-        if dias_restantes < 0:
+        if dias_restantes <= 0:
             status = "❌ VENCIDO"
-        elif dias_restantes == 0:
-            status = "⚠️ Vence HOJE"
         elif dias_restantes == 1:
+            status = "⚠️ Vence HOJE"
+        elif dias_restantes == 2:
             status = "⚠️ Vence AMANHÃ"
-        elif 2 <= dias_restantes <= 7:
-            status = f"⚠️ Vence em {dias_restantes} dias"
-        elif 8 <= dias_restantes <= 30:
-            semanas = dias_restantes // 7
+        elif 3 <= dias_restantes <= 8:
+            status = f"⚠️ Vence em {dias_restantes - 1} dias"
+        elif 9 <= dias_restantes <= 31:
+            semanas = (dias_restantes - 1) // 7
             status = f"📅 Vence em {semanas} semana(s)"
         else:
             status = "🟢 Válido por mais de 1 mês"
