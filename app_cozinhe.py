@@ -6,7 +6,6 @@ from pathlib import Path
 
 ARQUIVO_EXCEL = "estoque_produtos.xlsx"
 
-# Carregar dados se o arquivo já existir
 def carregar_estoque():
     if Path(ARQUIVO_EXCEL).exists():
         df = pd.read_excel(ARQUIVO_EXCEL)
@@ -14,35 +13,28 @@ def carregar_estoque():
         return df.to_dict(orient="records")
     return []
 
-# Salvar estoque no Excel
 def salvar_estoque(estoque):
     df = pd.DataFrame(estoque)
     df.to_excel(ARQUIVO_EXCEL, index=False)
 
-# Resetar estoque
 def resetar_estoque():
     st.session_state.estoque = []
     if Path(ARQUIVO_EXCEL).exists():
         Path(ARQUIVO_EXCEL).unlink()
 
-# Inicializa o estoque
 if 'estoque' not in st.session_state:
     st.session_state.estoque = carregar_estoque()
 
-# Estilo do app
 st.markdown("<h1 style='color:#6C3483;'>Cozinhe com o que você tem 🥦🍅🍞</h1>", unsafe_allow_html=True)
 st.markdown("Organize seu estoque de alimentos e **evite desperdícios** com praticidade.")
 
 hoje = datetime.today().date()
 st.info(f"📅 Hoje é: {hoje.strftime('%d/%m/%Y')}")
 
-# Botão para resetar o estoque
 if st.button("🗑️ Resetar Estoque"):
-    if st.confirm("Tem certeza que deseja apagar todos os dados do estoque?"):
-        resetar_estoque()
-        st.success("Estoque resetado com sucesso!")
+    resetar_estoque()
+    st.success("Estoque resetado com sucesso!")
 
-# Formulário para adicionar produto
 with st.form("adicionar_produto"):
     st.markdown("### 📝 Adicionar novo produto")
     nome = st.text_input("Nome do produto")
@@ -50,7 +42,7 @@ with st.form("adicionar_produto"):
     quantidade = st.number_input("Quantidade", min_value=1, step=1, value=1)
     submitted = st.form_submit_button("Adicionar")
     if submitted:
-        validade_data = validade  # já é date
+        validade_data = validade
         produto_existente = False
         for item in st.session_state.estoque:
             if item["nome"].lower() == nome.lower() and item["validade"] == validade_data:
@@ -66,7 +58,6 @@ with st.form("adicionar_produto"):
         salvar_estoque(st.session_state.estoque)
         st.success(f"✅ Produto **{nome}** adicionado com sucesso!")
 
-# Mostrar estoque
 st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
@@ -74,7 +65,7 @@ else:
     tabela = []
     for item in st.session_state.estoque:
         validade_data = item["validade"]
-        dias_restantes = (validade_data - hoje).days + 1  # ajuste de contagem
+        dias_restantes = (validade_data - hoje).days + 1
 
         if dias_restantes <= 0:
             status = "❌ VENCIDO"
