@@ -33,6 +33,8 @@ else:
         status = "✅ OK"
         if dias_restantes < 0:
             status = "❌ VENCIDO"
+        elif dias_restantes == 0:
+            status = "⚠️ Vence HOJE"
         elif dias_restantes <= 3:
             status = "⚠️ Vence em até 3 dias"
         elif dias_restantes <= 7:
