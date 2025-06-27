@@ -10,7 +10,7 @@ ARQUIVO_EXCEL = "estoque_produtos.xlsx"
 def carregar_estoque():
     if Path(ARQUIVO_EXCEL).exists():
         df = pd.read_excel(ARQUIVO_EXCEL)
-        df['validade'] = pd.to_datetime(df['validade'])
+        df['validade'] = pd.to_datetime(df['validade']).dt.date
         return df.to_dict(orient="records")
     return []
 
@@ -47,12 +47,19 @@ with st.form("adicionar_produto"):
     quantidade = st.number_input("Quantidade", min_value=1, step=1, value=1)
     submitted = st.form_submit_button("Adicionar")
     if submitted:
-        novo_item = {
-            "nome": nome,
-            "validade": validade,
-            "quantidade": quantidade
-        }
-        st.session_state.estoque.append(novo_item)
+        validade_data = validade  # já é date
+        produto_existente = False
+        for item in st.session_state.estoque:
+            if item["nome"].lower() == nome.lower() and item["validade"] == validade_data:
+                item["quantidade"] += quantidade
+                produto_existente = True
+                break
+        if not produto_existente:
+            st.session_state.estoque.append({
+                "nome": nome,
+                "validade": validade_data,
+                "quantidade": quantidade
+            })
         salvar_estoque(st.session_state.estoque)
         st.success(f"✅ Produto **{nome}** adicionado com sucesso!")
 
@@ -64,7 +71,7 @@ else:
     hoje = datetime.today().date()
     tabela = []
     for item in st.session_state.estoque:
-        validade_data = item["validade"].date() if isinstance(item["validade"], datetime) else item["validade"]
+        validade_data = item["validade"]
         dias_restantes = (validade_data - hoje).days
 
         if dias_restantes < 0:
