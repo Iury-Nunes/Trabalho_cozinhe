@@ -4,20 +4,8 @@ from datetime import datetime
 import pandas as pd
 from pathlib import Path
 from pytz import timezone
-import requests
-from pyfood.utils import Shelf
 
 ARQUIVO_EXCEL = "estoque_produtos.xlsx"
-
-# Inicializa o tradutor Pyfood corrigido
-shelf = Shelf(source_lang="pt")
-
-def traduzir_ingrediente(ingrediente):
-    try:
-        res = shelf.process_ingredients([ingrediente], lang_dest='en')
-        return res['ingredients_by_taxon'][0][0].lower()
-    except Exception:
-        return ingrediente.lower()
 
 def carregar_estoque():
     if Path(ARQUIVO_EXCEL).exists():
@@ -35,23 +23,14 @@ def resetar_estoque():
     if Path(ARQUIVO_EXCEL).exists():
         Path(ARQUIVO_EXCEL).unlink()
 
-def buscar_receitas(ingrediente):
-    ingrediente_en = traduzir_ingrediente(ingrediente)
-    url = f"https://www.themealdb.com/api/json/v1/1/filter.php?i={ingrediente_en}"
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json().get("meals", [])
-    except Exception:
-        return []
-    return []
-
 if 'estoque' not in st.session_state:
     st.session_state.estoque = carregar_estoque()
 
+# Aplicar fuso horário de São Paulo
 hoje = datetime.now(timezone("America/Sao_Paulo")).date()
 
-st.title("Cozinhe com o que você tem 🥦🍅🍞")
+st.markdown("<h1 style='color:#6C3483;'>Cozinhe com o que você tem 🥦🍅🍞</h1>", unsafe_allow_html=True)
+st.markdown("Organize seu estoque de alimentos e **evite desperdícios** com praticidade.")
 st.info(f"📅 Hoje é: {hoje.strftime('%d/%m/%Y')}")
 
 if st.button("🗑️ Resetar Estoque"):
@@ -59,7 +38,7 @@ if st.button("🗑️ Resetar Estoque"):
     st.success("Estoque resetado com sucesso!")
 
 with st.form("adicionar_produto"):
-    st.subheader("📝 Adicionar novo produto")
+    st.markdown("### 📝 Adicionar novo produto")
     nome = st.text_input("Nome do produto")
     validade = st.date_input("Data de validade", format="DD/MM/YYYY")
     quantidade = st.number_input("Quantidade", min_value=1, step=1, value=1)
@@ -81,9 +60,7 @@ with st.form("adicionar_produto"):
         salvar_estoque(st.session_state.estoque)
         st.success(f"✅ Produto **{nome}** adicionado com sucesso!")
 
-ingredientes_para_busca = set()
-
-st.subheader("📦 Estoque Atual")
+st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
 else:
@@ -91,7 +68,6 @@ else:
     for item in st.session_state.estoque:
         validade_data = item["validade"]
         dias_restantes = (validade_data - hoje).days + 1
-        ingredientes_para_busca.add(item["nome"].lower())
 
         if dias_restantes <= 0:
             status = "❌ VENCIDO"
@@ -115,19 +91,12 @@ else:
         })
 
     df_view = pd.DataFrame(tabela)
-    st.dataframe(df_view, use_container_width=True)
-
-st.subheader("🍽️ Receitas com seu estoque")
-receitas_unicas = {}
-for ingrediente in ingredientes_para_busca:
-    lista = buscar_receitas(ingrediente)
-    for r in lista or []:
-        receitas_unicas[r['idMeal']] = r
-
-if not receitas_unicas:
-    st.warning("Nenhuma receita encontrada com os ingredientes cadastrados.")
-else:
-    for receita in list(receitas_unicas.values())[:6]:
-        st.markdown(f"**{receita['strMeal']}**")
-        st.image(receita['strMealThumb'], width=200)
-        st.markdown(f"[🔗 Ver receita](https://www.themealdb.com/meal/{receita['idMeal']})")
+    st.dataframe(df_view.style.applymap(
+        lambda val: "color: red;" if "VENCIDO" in val else (
+            "color: orange;" if "HOJE" in val or "AMANHÃ" in val or "dias" in val else (
+                "color: #9C27B0;" if "semana" in val else (
+                    "color: #2874A6;" if "mês" in val else "color: green;"
+                )
+            )
+        ), subset=["Status"]
+    ), use_container_width=True)
