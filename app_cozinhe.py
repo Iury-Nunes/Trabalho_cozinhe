@@ -9,12 +9,12 @@ from pyfood.utils import Shelf
 
 ARQUIVO_EXCEL = "estoque_produtos.xlsx"
 
-# Inicializa o tradutor Pyfood
-shelf = Shelf(region='Canada', month_id=0, source='PT')
+# Inicializa o tradutor Pyfood corrigido
+shelf = Shelf(source_lang="pt")
 
 def traduzir_ingrediente(ingrediente):
     try:
-        res = shelf.process_ingredients([ingrediente], lang_dest='EN')
+        res = shelf.process_ingredients([ingrediente], lang_dest='en')
         return res['ingredients_by_taxon'][0][0].lower()
     except Exception:
         return ingrediente.lower()
