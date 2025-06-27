@@ -3,6 +3,7 @@ import streamlit as st
 from datetime import datetime
 import pandas as pd
 from pathlib import Path
+from pytz import timezone
 
 ARQUIVO_EXCEL = "estoque_produtos.xlsx"
 
@@ -25,10 +26,11 @@ def resetar_estoque():
 if 'estoque' not in st.session_state:
     st.session_state.estoque = carregar_estoque()
 
+# Aplicar fuso horário de São Paulo
+hoje = datetime.now(timezone("America/Sao_Paulo")).date()
+
 st.markdown("<h1 style='color:#6C3483;'>Cozinhe com o que você tem 🥦🍅🍞</h1>", unsafe_allow_html=True)
 st.markdown("Organize seu estoque de alimentos e **evite desperdícios** com praticidade.")
-
-hoje = datetime.today().date()
 st.info(f"📅 Hoje é: {hoje.strftime('%d/%m/%Y')}")
 
 if st.button("🗑️ Resetar Estoque"):
