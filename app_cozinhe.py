@@ -47,7 +47,7 @@ st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
 else:
-    hoje = datetime.today().date()
+    hoje = datetime.now().date()
     tabela = []
     for item in st.session_state.estoque:
         dias_restantes = (item["validade"].date() - hoje).days
@@ -56,12 +56,16 @@ else:
             status = "❌ VENCIDO"
         elif dias_restantes == 0:
             status = "⚠️ Vence HOJE"
-        elif dias_restantes <= 3:
-            status = "⚠️ Vence em até 3 dias"
-        elif dias_restantes <= 7:
-            status = "🕒 Vence em até 1 semana"
-        elif dias_restantes <= 30:
-            status = "📅 Vence em até 1 mês"
+        elif 1 <= dias_restantes <= 7:
+            status = f"⚠️ Vence em {dias_restantes} dia(s)"
+        elif 8 <= dias_restantes <= 30:
+            semanas = dias_restantes // 7
+            if semanas <= 4:
+                status = f"📅 Vence em {semanas} semana(s)"
+            else:
+                status = "📅 Vence em até 1 mês"
+        elif dias_restantes > 30:
+            status = "🟢 Válido por mais de 1 mês"
 
         tabela.append({
             "Produto": item["nome"],
@@ -72,9 +76,9 @@ else:
     df_view = pd.DataFrame(tabela)
     st.dataframe(df_view.style.applymap(
         lambda val: "color: red;" if "VENCIDO" in val else (
-            "color: orange;" if "HOJE" in val or "3 dias" in val else (
-                "color: #9C27B0;" if "1 semana" in val else (
-                    "color: #2874A6;" if "1 mês" in val else "color: green;"
+            "color: orange;" if "HOJE" in val or "dia(s)" in val else (
+                "color: #9C27B0;" if "semana" in val else (
+                    "color: #2874A6;" if "mês" in val else "color: green;"
                 )
             )
         ), subset=["Status"]
