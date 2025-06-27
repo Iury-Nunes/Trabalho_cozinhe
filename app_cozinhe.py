@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 from pathlib import Path
 from pytz import timezone
+import requests
 
 ARQUIVO_EXCEL = "estoque_produtos.xlsx"
 
@@ -23,10 +24,19 @@ def resetar_estoque():
     if Path(ARQUIVO_EXCEL).exists():
         Path(ARQUIVO_EXCEL).unlink()
 
+def buscar_receitas(ingrediente):
+    url = f"https://www.themealdb.com/api/json/v1/1/filter.php?i={ingrediente}"
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json().get("meals", [])
+    except Exception:
+        return []
+    return []
+
 if 'estoque' not in st.session_state:
     st.session_state.estoque = carregar_estoque()
 
-# Aplicar fuso horário de São Paulo
 hoje = datetime.now(timezone("America/Sao_Paulo")).date()
 
 st.markdown("<h1 style='color:#6C3483;'>Cozinhe com o que você tem 🥦🍅🍞</h1>", unsafe_allow_html=True)
@@ -65,9 +75,11 @@ if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
 else:
     tabela = []
+    ingredientes_para_busca = set()
     for item in st.session_state.estoque:
         validade_data = item["validade"]
         dias_restantes = (validade_data - hoje).days + 1
+        ingredientes_para_busca.add(item["nome"].lower())
 
         if dias_restantes <= 0:
             status = "❌ VENCIDO"
@@ -100,3 +112,15 @@ else:
             )
         ), subset=["Status"]
     ), use_container_width=True)
+
+    st.markdown("### 🍽️ Receitas com seu estoque")
+
+    for ingrediente in ingredientes_para_busca:
+        st.markdown(f"#### 🔍 Receitas com **{ingrediente}**:")
+        receitas = buscar_receitas(ingrediente)
+        if not receitas:
+            st.warning("Nenhuma receita encontrada.")
+        else:
+            for receita in receitas[:3]:
+                st.markdown(f"- [{receita['strMeal']}]({receita['strSource'] or 'https://www.themealdb.com/meal/' + receita['idMeal']})")
+                st.image(receita['strMealThumb'], width=200)
