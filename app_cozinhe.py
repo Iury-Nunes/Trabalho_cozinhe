@@ -13,7 +13,7 @@ st.markdown("Organize seu estoque de alimentos e evite desperdícios.")
 with st.form("adicionar_produto"):
     st.subheader("Adicionar novo produto")
     nome = st.text_input("Nome do produto")
-    validade = st.date_input("Data de validade")
+    validade = st.date_input("Data de validade", format="DD/MM/YYYY")
     submitted = st.form_submit_button("Adicionar")
     if submitted:
         st.session_state.estoque.append({
@@ -40,4 +40,4 @@ else:
         elif dias_restantes <= 30:
             status = "📅 Vence em até 1 mês"
 
-        st.write(f"**{item['nome']}** - Validade: {item['validade'].strftime('%Y-%m-%d')} - {status}")
+        st.write(f"**{item['nome']}** - Validade: {item['validade'].strftime('%d/%m/%Y')} - {status}")
