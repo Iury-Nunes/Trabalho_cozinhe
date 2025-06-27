@@ -4,6 +4,7 @@ from datetime import datetime
 import pandas as pd
 from pathlib import Path
 from pytz import timezone
+import urllib.parse
 
 ARQUIVO_EXCEL = "estoque_produtos.xlsx"
 
@@ -60,6 +61,7 @@ with st.form("adicionar_produto"):
         salvar_estoque(st.session_state.estoque)
         st.success(f"✅ Produto **{nome}** adicionado com sucesso!")
 
+# Se houver estoque, mostrar tabela e opções de edição
 st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
@@ -100,3 +102,33 @@ else:
             )
         ), subset=["Status"]
     ), use_container_width=True)
+
+    # ✏️ Edição de produto
+    st.markdown("### ✏️ Editar produto")
+    opcoes = [f"{i['nome']} - {i['validade'].strftime('%d/%m/%Y')}" for i in st.session_state.estoque]
+    escolha = st.selectbox("Escolha um item para editar", opcoes)
+    idx = opcoes.index(escolha)
+    item = st.session_state.estoque[idx]
+
+    novo_nome = st.text_input("Novo nome", value=item["nome"])
+    nova_qtd = st.number_input("Nova quantidade", min_value=1, value=item["quantidade"])
+    nova_validade = st.date_input("Nova validade", value=item["validade"], format="DD/MM/YYYY")
+
+    if st.button("Salvar edição"):
+        item["nome"] = novo_nome
+        item["quantidade"] = nova_qtd
+        item["validade"] = nova_validade
+        salvar_estoque(st.session_state.estoque)
+        st.success("Produto atualizado com sucesso!")
+
+    # 🔎 Sugestão de busca de receita
+    st.markdown("### 🍽️ Buscar receita com ingredientes")
+    ingredientes_disponiveis = list({i["nome"] for i in st.session_state.estoque})
+    selecionados = st.multiselect("Escolha os ingredientes para a receita", ingredientes_disponiveis)
+
+    if selecionados:
+        lista = ", ".join(selecionados)
+        st.markdown(f"**Receita com {lista}**")
+        query = urllib.parse.quote(f"receita com {lista}")
+        url_busca = f"https://www.google.com/search?q={query}"
+        st.markdown(f"[🔎 Buscar no Google]({url_busca})")
