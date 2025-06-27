@@ -27,9 +27,9 @@ st.subheader("Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
 else:
-    hoje = datetime.today()
+    hoje = datetime.today().date()
     for item in st.session_state.estoque:
-        dias_restantes = (item["validade"] - hoje).days
+        dias_restantes = (item["validade"].date() - hoje).days
         status = "✅ OK"
         if dias_restantes < 0:
             status = "❌ VENCIDO"
