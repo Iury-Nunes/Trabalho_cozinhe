@@ -47,7 +47,7 @@ st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
 else:
-    hoje = datetime.now().date()
+    hoje = datetime.today().date()
     tabela = []
     for item in st.session_state.estoque:
         dias_restantes = (item["validade"].date() - hoje).days
