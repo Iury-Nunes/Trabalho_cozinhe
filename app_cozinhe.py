@@ -105,3 +105,23 @@ if selecionados:
     query = urllib.parse.quote(f"receita com {lista}")
     url_busca = f"https://www.google.com/search?q={query}"
     st.markdown(f"[🔎 Buscar no Google]({url_busca})")
+
+
+# ✏️ Editar produto
+st.subheader("✏️ Editar produto existente")
+opcoes = [f"{i['nome']} - {i['valdade'].strftime('%d/%m/%Y')}" for i in st.session_state.estoque]
+if opcoes:
+    escolha = st.selectbox("Escolha um item para editar", opcoes)
+    idx = opcoes.index(escolha)
+    item = st.session_state.estoque[idx]
+
+    novo_nome = st.text_input("Novo nome", value=item["nome"], key="edit_nome")
+    nova_qtd = st.number_input("Nova quantidade", min_value=1, value=item["quantidade"], key="edit_qtd")
+    nova_valdade = st.date_input("Nova validade", value=item["valdade"], format="DD/MM/YYYY", key="edit_val")
+
+    if st.button("Salvar edição"):
+        item["nome"] = novo_nome
+        item["quantidade"] = nova_qtd
+        item["valdade"] = nova_valdade
+        salvar_estoque(st.session_state.estoque)
+        st.success("Produto atualizado com sucesso!")
