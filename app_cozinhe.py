@@ -40,13 +40,14 @@ if 'estoque' not in st.session_state:
 hoje = datetime.now(timezone("America/Sao_Paulo")).date()
 
 st.markdown("<h1 style='color:#6C3483;'>Cozinhe com o que você tem 🥦🍅🍞</h1>", unsafe_allow_html=True)
-st.markdown("Organize seu estoque de alimentos e **evite desperdícios** com praticidade.")
 st.info(f"📅 Hoje é: {hoje.strftime('%d/%m/%Y')}")
 
+# Botão para resetar
 if st.button("🗑️ Resetar Estoque"):
     resetar_estoque()
     st.success("Estoque resetado com sucesso!")
 
+# Formulário para adicionar item
 with st.form("adicionar_produto"):
     st.markdown("### 📝 Adicionar novo produto")
     nome = st.text_input("Nome do produto")
@@ -70,6 +71,24 @@ with st.form("adicionar_produto"):
         salvar_estoque(st.session_state.estoque)
         st.success(f"✅ Produto **{nome}** adicionado com sucesso!")
 
+# Editar item existente
+st.markdown("### ✏️ Editar produto existente")
+nomes_produtos = [f"{i['nome']} - {i['validade'].strftime('%d/%m/%Y')}" for i in st.session_state.estoque]
+if nomes_produtos:
+    item_escolhido = st.selectbox("Selecione um item para editar", nomes_produtos)
+    indice = nomes_produtos.index(item_escolhido)
+    item = st.session_state.estoque[indice]
+    novo_nome = st.text_input("Novo nome", value=item["nome"], key="edit_nome")
+    nova_quantidade = st.number_input("Nova quantidade", value=item["quantidade"], min_value=1, key="edit_qtd")
+    nova_validade = st.date_input("Nova validade", value=item["validade"], format="DD/MM/YYYY", key="edit_val")
+    if st.button("Salvar edição"):
+        item["nome"] = novo_nome
+        item["quantidade"] = nova_quantidade
+        item["validade"] = nova_validade
+        salvar_estoque(st.session_state.estoque)
+        st.success("Produto atualizado com sucesso!")
+
+# Exibir estoque
 st.markdown("### 📦 Estoque Atual")
 if not st.session_state.estoque:
     st.info("Nenhum produto cadastrado.")
@@ -113,14 +132,14 @@ else:
         ), subset=["Status"]
     ), use_container_width=True)
 
-    st.markdown("### 🍽️ Receitas com seu estoque")
-
-    for ingrediente in ingredientes_para_busca:
-        st.markdown(f"#### 🔍 Receitas com **{ingrediente}**:")
-        receitas = buscar_receitas(ingrediente)
-        if not receitas:
-            st.warning("Nenhuma receita encontrada.")
-        else:
-            for receita in receitas[:3]:
-                st.markdown(f"- [{receita['strMeal']}]({receita['strSource'] or 'https://www.themealdb.com/meal/' + receita['idMeal']})")
-                st.image(receita['strMealThumb'], width=200)
+# Exibir receitas
+st.markdown("### 🍽️ Receitas com seu estoque")
+for ingrediente in ingredientes_para_busca:
+    st.markdown(f"#### 🔍 Receitas com **{ingrediente}**:")
+    receitas = buscar_receitas(ingrediente)
+    if not receitas:
+        st.warning("Nenhuma receita encontrada.")
+    else:
+        for receita in receitas[:3]:
+            st.markdown(f"- [{receita['strMeal']}]({receita['strSource'] or 'https://www.themealdb.com/meal/' + receita['idMeal']})")
+            st.image(receita['strMealThumb'], width=200)
