@@ -50,16 +50,16 @@ else:
     hoje = datetime.today().date()
     tabela = []
     for item in st.session_state.estoque:
-        dias_restantes = (item["validade"].date() - hoje).days
+        dias_restantes = (item["validade"].date() - hoje).days + 1  # Ajuste de +1 dia
         status = "✅ OK"
-        if dias_restantes < 0:
+        if dias_restantes <= 0:
             status = "❌ VENCIDO"
-        elif dias_restantes == 0:
+        elif dias_restantes == 1:
             status = "⚠️ Vence HOJE"
-        elif 1 <= dias_restantes <= 7:
-            status = f"⚠️ Vence em {dias_restantes} dia(s)"
+        elif 2 <= dias_restantes <= 7:
+            status = f"⚠️ Vence em {dias_restantes - 1} dia(s)"
         elif 8 <= dias_restantes <= 30:
-            semanas = dias_restantes // 7
+            semanas = (dias_restantes - 1) // 7
             if semanas <= 4:
                 status = f"📅 Vence em {semanas} semana(s)"
             else:
